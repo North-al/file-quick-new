@@ -25,3 +25,5 @@ With a single shortcut, open a directory picker, choose the target folder, and c
 1. 按 `Alt+Insert`（或命令面板输入 `新建文件/文件夹`）。
 2. 在弹出的目录列表中选择目标文件夹。
 3. 输入文件或文件夹名称并回车，即可创建。
+
+![demo](https://github.com/North-al/file-quick-new/raw/main/images/demo.gif)
