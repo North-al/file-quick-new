@@ -1,7 +1,7 @@
 {
     "name": "file-quick-new",
     "publisher": "North",
-    "displayName": "file Quick New",
+    "displayName": "File Quick New",
     "description": "Create files/folders in the specified directory quickly through quick operations",
     "version": "0.0.1",
     "engines": {
@@ -25,10 +25,12 @@
         "onCommand:file-quick-new.open"
     ],
     "main": "./out/extension.js",
+    "icon": "images/icon.png",
     "repository": {
         "type": "git",
         "url": "https://github.com/North-al/file-quick-new.git"
     },
+    "homepage": "https://github.com/North-al/file-quick-new#readme",
     "contributes": {
         "commands": [
             {
