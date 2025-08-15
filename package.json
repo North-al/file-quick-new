@@ -1,0 +1,81 @@
+{
+    "name": "file-quick-new",
+    "publisher": "North",
+    "displayName": "file Quick New",
+    "description": "Create files/folders in the specified directory quickly through quick operations",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.103.0"
+    },
+    "categories": [
+        "Other",
+        "Keymaps"
+    ],
+    "keywords": [
+        "file",
+        "quick",
+        "create",
+        "new file",
+        "quick create",
+        "folder select",
+        "file creator",
+        "directory picker"
+    ],
+    "activationEvents": [
+        "onCommand:file-quick-new.open"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "file-quick-new.open",
+                "title": "新建文件（New File）",
+                "category": "File Quick New",
+                "shortTitle": "new file"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "file-quick-new.open",
+                "key": "alt+insert",
+                "when": "!inputFocus || editorFocus || explorerViewletFocus"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "File Quick New",
+            "properties": {
+                "file-quick-new.excludeFolders": {
+                    "type": "array",
+                    "default": [
+                        "node_modules",
+                        ".git"
+                    ],
+                    "description": "List of folder names to exclude from the directory picker.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "pnpm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "pnpm run compile && pnpm run lint",
+        "lint": "eslint src",
+        "test": "vscode-test"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.102.0",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "22.x",
+        "@typescript-eslint/eslint-plugin": "^8.39.0",
+        "@typescript-eslint/parser": "^8.39.0",
+        "eslint": "^9.32.0",
+        "typescript": "^5.9.2",
+        "@vscode/test-cli": "^0.0.11",
+        "@vscode/test-electron": "^2.5.2"
+    }
+}
