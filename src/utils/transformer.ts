@@ -14,3 +14,8 @@ export function toKebabCase(name: string) {
         .replace(/^-+|-+$/g, '')
         .toLowerCase()
 }
+
+export function ensureValidJSVariableName(name: string): string {
+    const isValid = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(name)
+    return isValid ? name : '_' + name
+}

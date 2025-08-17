@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { toKebabCase, toPascalCase } from '../utils/transformer'
+import { ensureValidJSVariableName, toKebabCase, toPascalCase } from '../utils/transformer'
 
 /** 最终可创建的叶子模板 */
 export interface LeafTemplate extends vscode.QuickPickItem {
@@ -31,7 +31,6 @@ const vueChildren: LeafTemplate[] = [
 </template>
 
 <script setup lang="ts">
-// defineProps<{ }>()
 defineOptions({
     name: '${toPascalCase(base)}'
 })
@@ -45,7 +44,7 @@ defineOptions({
     {
         nodeType: 'leaf',
         label: 'Options API',
-        description: 'Vue 3 + defineComponent (TS)',
+        description: 'Vue 2 Options',
         ext: 'vue',
         gen: base =>
             `
@@ -53,15 +52,15 @@ defineOptions({
   <div class="${toKebabCase(base)}"></div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-export default defineComponent({
+<script>
+export default {
   name: '${toPascalCase(base)}',
   components: {},
-  setup() {
-    return {};
-  }
-});
+  data: () => ({
+    msg: '${toPascalCase(base)}'
+  }),
+  methods: {}
+}
 </script>
 
 <style scoped>
@@ -76,14 +75,12 @@ const jsChildren: LeafTemplate[] = [
     {
         nodeType: 'leaf',
         label: 'JSX 文件',
-        description: 'React Functional Component (JSX)',
+        description: 'JSX 组件',
         ext: 'jsx',
         gen: base =>
             `
-import React from 'react';
-
-export default function ${toPascalCase(base)}() {
-  return <div className="${toKebabCase(base)}">${toPascalCase(base)}</div>;
+export default function ${ensureValidJSVariableName(toPascalCase(base))}() {
+  return <div>${toPascalCase(base)}</div>;
 }
 `.trimStart()
     }
@@ -94,11 +91,11 @@ const tsChildren: LeafTemplate[] = [
     {
         nodeType: 'leaf',
         label: 'TSX 文件',
-        description: 'React Functional Component (TSX)',
+        description: 'TSX 组件',
         ext: 'tsx',
         gen: base =>
             `
-export default function ${toPascalCase(base)}() {
+export default function ${ensureValidJSVariableName(toPascalCase(base))}() {
   return <div>${toPascalCase(base)}</div>;
 }
 `.trimStart()

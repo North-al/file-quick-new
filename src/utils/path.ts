@@ -77,3 +77,13 @@ export async function getBaseDirectory(uri?: vscode.Uri): Promise<string | undef
     }
     return baseDir || getTargetFolder() || getWorkspaceRoot()
 }
+
+/** 获取全部可选文件夹列表（封装 getAllFolders 调用，便于后续扩展过滤逻辑） */
+export function getWorkspaceFoldersList(
+    getAllFoldersFn: (root: string, base: string, exclude: string[]) => string[],
+    exclude: string[]
+): string[] {
+    const root = getWorkspaceRoot()
+    if (!root) return []
+    return getAllFoldersFn(root, '', exclude)
+}
