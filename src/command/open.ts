@@ -7,11 +7,10 @@ import {
     ensureDir,
     getBaseDirectory,
     getWorkspaceFoldersList,
-    buildTargetPath,
-    ensureValidJSVariableName
+    buildTargetPath
 } from '../utils'
 import { getExcludeFolders, watchConfigChanges } from '../features/config'
-import { pickTemplateMultiStep, LeafTemplate } from '../features/template'
+import { pickTemplateMultiStep } from '../features/template'
 import { buildBaseDirQuickPickItems } from '../features/picker'
 
 export const openMenu = async (uri?: vscode.Uri) => {
