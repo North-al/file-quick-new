@@ -1,70 +1,30 @@
 import * as vscode from 'vscode'
-import { getAllFolders, getTargetFolder } from '../utils'
 import * as path from 'path'
-import * as fs from 'fs'
-
-interface TemplateItem extends vscode.QuickPickItem {
-    ext?: string
-    content?: string
-    isFolder?: boolean
-}
-
-const templates: TemplateItem[] = [
-    { label: '空文件', ext: '', description: '创建空白文件' },
-    {
-        label: 'vue3 TypeScript',
-        ext: 'vue',
-        content: '<template>\n  <script setup lang="ts">\n  </script>\n</template>',
-        description: 'Vue 3 组件 (TypeScript)'
-    },
-    { label: 'TypeScript 文件', ext: 'ts', content: '', description: 'TypeScript 源文件' },
-    { label: 'JavaScript 文件', ext: 'js', content: '', description: 'JavaScript 源文件' },
-    {
-        label: 'TSX文件',
-        ext: 'tsx',
-        content: 'export const Component = () => {\n    return <div/>\n}\n',
-        description: 'React 函数组件 (TSX)'
-    },
-    { label: 'JSON 文件', ext: 'json', content: '{\n  \n}\n', description: 'JSON 模板' },
-    { label: '文件夹', isFolder: true, description: '仅创建目录' }
-]
+import { getWorkspaceRoot, getTargetFolder, getBaseDirectory, getAllFolders, writeFile, ensureDir } from '../utils'
+import { getExcludeFolders, watchConfigChanges } from '../features/config'
+import { pickTemplateMultiStep } from '../features/template'
 
 export const openMenu = async (uri?: vscode.Uri) => {
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath
+    // 获取工作区根目录
+    const workspaceRoot = getWorkspaceRoot()
     if (!workspaceRoot) {
         vscode.window.showErrorMessage('没有打开工作区')
         return
     }
 
-    // 读取配置
-    const config = vscode.workspace.getConfiguration()
-    const excludeFolders: string[] = config.get('file-quick-new.excludeFolders', [])
+    // 获取排除文件夹配置
+    let excludeFolders = getExcludeFolders()
     console.log('Exclude folders:', excludeFolders)
-
-    // 监听配置变化
-    vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration('file-quick-new.excludeFolders')) {
-            const updated = vscode.workspace.getConfiguration().get<string[]>('file-quick-new.excludeFolders', [])
-            console.log('Updated exclude folders:', updated)
-        }
+    watchConfigChanges(updatedExcludeFolders => {
+        excludeFolders = updatedExcludeFolders
     })
 
-    // 预先计算文件夹列表用于快速选择
-    const folders = getAllFolders(workspaceRoot, '', excludeFolders)
+    // 获取所有文件夹（排除已配置的目录）
+    const folders = getAllFolders(getWorkspaceRoot()!, '', excludeFolders)
 
-    // 基础目录：传入 uri -> 文件则其父目录，目录则其本身
-    let baseDir: string | undefined
-    if (uri) {
-        try {
-            const stat = await vscode.workspace.fs.stat(uri)
-            if (stat.type & vscode.FileType.Directory) baseDir = uri.fsPath
-            else baseDir = path.dirname(uri.fsPath)
-        } catch {
-            /* ignore */
-        }
-    }
-    if (!baseDir) baseDir = getTargetFolder() || workspaceRoot
+    let baseDir = await getBaseDirectory(uri)
 
+    // 选择目标目录
     const pickedFolder = await vscode.window.showQuickPick(
         [
             { label: '(当前目录)', description: baseDir },
@@ -79,9 +39,11 @@ export const openMenu = async (uri?: vscode.Uri) => {
         baseDir = path.join(workspaceRoot, folderPicked)
     }
 
-    const tpl = await vscode.window.showQuickPick(templates, { placeHolder: '选择要创建的类型' })
+    // 选择模板（调用多级模板选择器）
+    const tpl = await pickTemplateMultiStep()
     if (!tpl) return
 
+    // 输入文件/目录名称
     const name = await vscode.window.showInputBox({
         prompt: tpl.isFolder
             ? '输入要创建的目录（可多级，如 components/Button）'
@@ -90,8 +52,8 @@ export const openMenu = async (uri?: vscode.Uri) => {
     })
     if (!name) return
 
-    // 如果用户直接输入带扩展名，尊重其输入，否则加模板 ext
-    let targetPath = path.join(baseDir, name)
+    // 生成目标文件路径
+    let targetPath = path.join(baseDir!, name)
     if (
         !tpl.isFolder &&
         tpl.ext &&
@@ -101,13 +63,14 @@ export const openMenu = async (uri?: vscode.Uri) => {
         targetPath += '.' + tpl.ext
     }
 
+    // 创建文件或目录
     try {
         if (tpl.isFolder) {
             ensureDir(targetPath)
         } else {
             ensureDir(path.dirname(targetPath))
-            if (!fs.existsSync(targetPath)) {
-                fs.writeFileSync(targetPath, tpl.content ?? '')
+            if (tpl.gen) {
+                writeFile(targetPath, tpl.gen(name) ?? '')
             }
             const doc = await vscode.workspace.openTextDocument(targetPath)
             await vscode.window.showTextDocument(doc)
@@ -116,9 +79,4 @@ export const openMenu = async (uri?: vscode.Uri) => {
     } catch (e: any) {
         vscode.window.showErrorMessage('创建失败: ' + (e?.message || e))
     }
-}
-
-function ensureDir(dir: string) {
-    if (fs.existsSync(dir)) return
-    fs.mkdirSync(dir, { recursive: true })
 }

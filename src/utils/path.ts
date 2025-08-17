@@ -32,7 +32,6 @@ export const getSubFolders = (dir: string): string[] => {
  */
 export const getTargetFolder = (): string | undefined => {
     const activeEditor = vscode.window.activeTextEditor
-    console.info('🚀 ~ getTargetFolder ~ activeEditor:', activeEditor)
 
     if (activeEditor) {
         return path.dirname(activeEditor.document.uri.fsPath)
@@ -66,4 +65,15 @@ export function getAllFolders(
         }
     }
     return result
+}
+
+export async function getBaseDirectory(uri?: vscode.Uri): Promise<string | undefined> {
+    let baseDir: string | undefined
+    if (uri) {
+        try {
+            const stat = await vscode.workspace.fs.stat(uri)
+            baseDir = stat.type & vscode.FileType.Directory ? uri.fsPath : path.dirname(uri.fsPath)
+        } catch {}
+    }
+    return baseDir || getTargetFolder() || getWorkspaceRoot()
 }

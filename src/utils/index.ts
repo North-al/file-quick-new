@@ -14,3 +14,5 @@ export const register = <T extends (...args: any[]) => any>(
 }
 
 export * from './path'
+export * from './fsUtil'
+export * from './transformer'
